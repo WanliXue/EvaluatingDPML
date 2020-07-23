@@ -14,3 +14,5 @@ import numpy as np
 
 train_y=[1,1,0,2]
 print(len(np.unique(train_y)))
+
+# failed
