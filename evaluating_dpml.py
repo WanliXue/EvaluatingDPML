@@ -36,11 +36,11 @@ def run_experiment(args):
         save=args.save_model)
     train_loss, train_acc, test_loss, test_acc = aux
     per_instance_loss = np.array(log_loss(true_y, pred_y))
-   
+
     features = get_random_features(true_x, range(true_x.shape[1]), 5)
     print(features)
 
-    # Yeom's membership inference attack when only train_loss is known 
+    # Yeom's membership inference attack when only train_loss is known
     pred_membership = yeom_membership_inference(per_instance_loss, membership, train_loss)
     fpr, tpr, thresholds = roc_curve(membership, pred_membership, pos_label=1)
     yeom_mem_adv = tpr[1] - fpr[1]
@@ -54,10 +54,10 @@ def run_experiment(args):
     for pred_membership in pred_membership_all:
         fpr, tpr, thresholds = roc_curve(membership, pred_membership, pos_label=1)
         yeom_attr_adv.append(tpr[1] - fpr[1])
-    
+
     if not os.path.exists(RESULT_PATH+args.train_dataset):
         os.makedirs(RESULT_PATH+args.train_dataset)
-    
+
     if args.target_privacy == 'no_privacy':
         pickle.dump([train_acc, test_acc, train_loss, membership, shokri_mem_adv, shokri_mem_confidence, yeom_mem_adv, per_instance_loss, yeom_attr_adv, pred_membership_all, features], open(RESULT_PATH+args.train_dataset+'/'+args.target_model+'_'+'no_privacy_'+str(args.l2_ratio)+'.p', 'wb'))
     else:
@@ -96,12 +96,12 @@ if __name__ == '__main__':
     # parse configuration
     args = parser.parse_args()
     print(vars(args))
-    
+
     # Flag to disable GPU
     if args.use_cpu:
     	os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
-    if args.save_data:
+    if args.save_data: #only seperate the dataset if =1
         save_data(args)
     else:
         run_experiment(args)

@@ -49,7 +49,7 @@ def train_target_model(args, dataset=None, epochs=100, batch_size=100, learning_
 
     attack_x.append(pred_scores)
     attack_y.append(np.ones(train_x.shape[0]))
-    
+
     # data not used in training, label is 0
     pred_input_fn = tf.compat.v1.estimator.inputs.numpy_input_fn(
         x={'x': test_x},
@@ -58,7 +58,7 @@ def train_target_model(args, dataset=None, epochs=100, batch_size=100, learning_
 
     predictions = classifier.predict(input_fn=pred_input_fn)
     _, pred_scores = get_predictions(predictions)
-    
+
     attack_x.append(pred_scores)
     attack_y.append(np.zeros(test_x.shape[0]))
 
@@ -95,10 +95,10 @@ def train_shadow_models(args, n_hidden=50, epochs=100, n_shadow=20, learning_rat
 
         predictions = classifier.predict(input_fn=pred_input_fn)
         _, pred_scores = get_predictions(predictions)
-    
+
         attack_i_x.append(pred_scores)
         attack_i_y.append(np.ones(train_x.shape[0]))
-    
+
         # data not used in training, label is 0
         pred_input_fn = tf.compat.v1.estimator.inputs.numpy_input_fn(
             x={'x': test_x},
@@ -107,10 +107,10 @@ def train_shadow_models(args, n_hidden=50, epochs=100, n_shadow=20, learning_rat
 
         predictions = classifier.predict(input_fn=pred_input_fn)
         _, pred_scores = get_predictions(predictions)
-    
+
         attack_i_x.append(pred_scores)
         attack_i_y.append(np.zeros(test_x.shape[0]))
-        
+
         attack_x += attack_i_x
         attack_y += attack_i_y
         classes.append(np.concatenate([train_y, test_y]))
@@ -222,7 +222,7 @@ def load_data(data_name, args):
 
 
 def shokri_membership_inference(args, attack_test_x, attack_test_y, test_classes):
-    print('-' * 10 + 'SHOKRI\'S MEMBERSHIP INFERENCE' + '-' * 10 + '\n')    
+    print('-' * 10 + 'SHOKRI\'S MEMBERSHIP INFERENCE' + '-' * 10 + '\n')
     print('-' * 10 + 'TRAIN SHADOW' + '-' * 10 + '\n')
     attack_train_x, attack_train_y, train_classes = train_shadow_models(
         args=args,
@@ -249,7 +249,7 @@ def shokri_membership_inference(args, attack_test_x, attack_test_y, test_classes
 
 
 def yeom_membership_inference(per_instance_loss, membership, train_loss, test_loss=None):
-    print('-' * 10 + 'YEOM\'S MEMBERSHIP INFERENCE' + '-' * 10 + '\n')    
+    print('-' * 10 + 'YEOM\'S MEMBERSHIP INFERENCE' + '-' * 10 + '\n')
     if test_loss == None:
     	pred_membership = np.where(per_instance_loss <= train_loss, 1, 0)
     else:
@@ -262,7 +262,7 @@ def proposed_membership_inference(v_dataset, true_x, true_y, classifier, per_ins
     print('-' * 10 + 'PROPOSED MEMBERSHIP INFERENCE' + '-' * 10 + '\n')
     v_train_x, v_train_y, v_test_x, v_test_y = v_dataset
     v_true_x = np.vstack([v_train_x, v_test_x])
-    v_true_y = np.concatenate([v_train_y, v_test_y])    
+    v_true_y = np.concatenate([v_train_y, v_test_y])
     v_pred_y, v_membership, v_test_classes, v_classifier, aux = train_target_model(
         args=args,
         dataset=v_dataset,
@@ -321,7 +321,7 @@ def loss_increase_counts(true_x, true_y, classifier, per_instance_loss, noise_pa
     for t in range(max_t):
         noisy_x = true_x + generate_noise(true_x.shape, true_x.dtype, noise_params)
         pred_input_fn = tf.compat.v1.estimator.inputs.numpy_input_fn(
-            x={'x': noisy_x}, 
+            x={'x': noisy_x},
            num_epochs=1,
             shuffle=False)
         predictions = classifier.predict(input_fn=pred_input_fn)
@@ -337,7 +337,7 @@ def yeom_attribute_inference(true_x, true_y, classifier, membership, features, t
     for feature in features:
         orignial_attribute = np.copy(true_x[:,feature])
         low_value, high_value, true_attribute_value = get_attribute_variations(true_x, feature)
-        
+
         true_x[:,feature] = low_value
         pred_input_fn = tf.compat.v1.estimator.inputs.numpy_input_fn(
             x={'x': true_x},
@@ -347,7 +347,7 @@ def yeom_attribute_inference(true_x, true_y, classifier, membership, features, t
         _, low_op = get_predictions(predictions)
         low_op = low_op.astype('float32')
         low_op = log_loss(true_y, low_op)
-        
+
         true_x[:,feature] = high_value
         pred_input_fn = tf.compat.v1.estimator.inputs.numpy_input_fn(
             x={'x': true_x},
@@ -357,10 +357,10 @@ def yeom_attribute_inference(true_x, true_y, classifier, membership, features, t
         _, high_op = get_predictions(predictions)
         high_op = high_op.astype('float32')
         high_op = log_loss(true_y, high_op)
-        
+
         high_prob = np.sum(true_attribute_value) / len(true_attribute_value)
         low_prob = 1 - high_prob
-        
+
         if test_loss == None:
             pred_attribute_value = np.where(low_prob * stats.norm(0, train_loss).pdf(low_op) >= high_prob * stats.norm(0, train_loss).pdf(high_op), 0, 1)
             mask = [1]*len(pred_attribute_value)
@@ -369,7 +369,7 @@ def yeom_attribute_inference(true_x, true_y, classifier, membership, features, t
             high_mem = np.where(stats.norm(0, train_loss).pdf(high_op) >= stats.norm(0, test_loss).pdf(high_op), 1, 0)
             pred_attribute_value = [np.argmax([low_prob * a, high_prob * b]) for a, b in zip(low_mem, high_mem)]
             mask = [a | b for a, b in zip(low_mem, high_mem)]
-        
+
         pred_membership = mask & (pred_attribute_value ^ true_attribute_value ^ [1]*len(pred_attribute_value))
         prety_print_result(membership, pred_membership)
         pred_membership_all.append(pred_membership)
@@ -386,7 +386,7 @@ def proposed_attribute_inference(true_x, true_y, classifier, membership, feature
         orignial_attribute = np.copy(true_x[:,feature])
         low_value, high_value, true_attribute_value = get_attribute_variations(true_x, feature)
         noise_params = (args.attack_noise_type, args.attack_noise_coverage, args.attack_noise_magnitude)
-        
+
         true_x[:,feature] = low_value
         pred_input_fn = tf.compat.v1.estimator.inputs.numpy_input_fn(
             x={'x': true_x},
@@ -397,7 +397,7 @@ def proposed_attribute_inference(true_x, true_y, classifier, membership, feature
         low_op = low_op.astype('float32')
         low_op = log_loss(true_y, low_op)
         low_counts = loss_increase_counts(true_x, true_y, classifier, low_op, noise_params)
-        
+
         true_x[:,feature] = high_value
         pred_input_fn = tf.compat.v1.estimator.inputs.numpy_input_fn(
             x={'x': true_x},
@@ -408,7 +408,7 @@ def proposed_attribute_inference(true_x, true_y, classifier, membership, feature
         high_op = high_op.astype('float32')
         high_op = log_loss(true_y, high_op)
         high_counts = loss_increase_counts(true_x, true_y, classifier, high_op, noise_params)
-        
+
         true_attribute_value_all.append(true_attribute_value)
         low_per_instance_loss_all.append(low_op)
         high_per_instance_loss_all.append(high_op)
