@@ -16,3 +16,8 @@ train_y=[1,1,0,2]
 print(len(np.unique(train_y)))
 
 # failed
+
+def test_para(tem=1):
+    print (tem/3)
+
+test_para(5)
