@@ -19,6 +19,8 @@ def run_experiment(args):
     true_y = np.append(train_y, test_y)
     batch_size = args.target_batch_size
 
+
+
     pred_y, membership, test_classes, classifier, aux = train_target_model(
         args=args,
         dataset=dataset,
@@ -59,7 +61,7 @@ def run_experiment(args):
         os.makedirs(RESULT_PATH+args.train_dataset)
 
     if args.target_privacy == 'no_privacy':
-        pickle.dump([train_acc, test_acc, train_loss, membership, shokri_mem_adv, shokri_mem_confidence, yeom_mem_adv, per_instance_loss, yeom_attr_adv, pred_membership_all, features], open(RESULT_PATH+args.train_dataset+'/'+args.target_model+'_'+'no_privacy_'+str(args.l2_ratio)+'.p', 'wb'))
+        pickle.dump([train_acc, test_acc, train_loss, membership, shokri_mem_adv, shokri_mem_confidence, yeom_mem_adv, per_instance_loss, yeom_attr_adv, pred_membership_all, features], open(RESULT_PATH+args.train_dataset+'/'+args.target_model+'_'+'no_privacy_'+str(args.target_l2_ratio)+'.p', 'wb'))
     else:
         pickle.dump([train_acc, test_acc, train_loss, membership, shokri_mem_adv, shokri_mem_confidence, yeom_mem_adv, per_instance_loss, yeom_attr_adv, pred_membership_all, features], open(RESULT_PATH+args.train_dataset+'/'+args.target_model+'_'+args.target_privacy+'_'+args.target_dp+'_'+str(args.target_epsilon)+'_'+str(args.run)+'.p', 'wb'))
 
